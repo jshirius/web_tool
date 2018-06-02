@@ -17,27 +17,35 @@ if __name__ == '__main__':
         print ("Usage: $ python " + param[0] + " number")
         quit()
 
-    #
+    #本来は引数から取得したいが、サンプルコードなのでURLはハードコーディング
     #url = param[1]
 
     #WEBサイトを取得
+    #青空文庫のサイトからHTMLデータを取得する
     url = "http://www.aozora.gr.jp/index_pages/person148.html"
     res = req.urlopen(url)
     soup = BeautifulSoup(res, 'html.parser')
 
-    #テキストのみ取得
+    #全てのh1タグのテキストを取得する
     print("----------h1のリスト----------")
     for s in soup.find_all("h1"): 
         print(s.text)
 
+    #全てのh2タグのテキストを取得する
     print("----------h2のリスト----------")
     for s in soup.find_all("h2"): 
         print(s.text)
         
+
+    #全てのh3タグのテキストを取得する       
     print("----------h3のリスト----------")
     for s in soup.find_all("h3"): 
         print(s.text)
             
+    #currentクラスタグの情報
+    print("----------1つ目のcurrentクラスの情報を取得する----------")
+    print(soup.select_one(".current").string)
+
     #タグ以外の文字列のみ出力する（かなり汚いが・・・）
     print("----------タグ以外の全ての文字列----------")
     for s in soup(['script', 'style']):
