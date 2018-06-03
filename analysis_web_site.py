@@ -2,12 +2,41 @@
 from bs4 import BeautifulSoup
 import urllib.request as req
 import sys
-
+import MeCab
 
 u"""
 WEBコンテンツの分析ツール
 """
 
+def morphological(text):
+    mecab = MeCab.Tagger("-Ochasen")
+    node = mecab.parseToNode(text)  ## 解析を実行
+
+    words = []
+    wordDict = {}
+
+    while node:
+
+        surface = node.feature.split(',')
+
+        #print(surface)
+    # if len(surface) != 3:
+        #    node = node.next
+        #   continue
+        if surface[0] == '名詞':
+            # if True:
+            words.append(surface[6])   
+            key = surface[6]
+            #重複判定
+            if(key in wordDict):
+                #存在する
+                wordDict[key] = wordDict[key]  + 1
+            else: 
+                wordDict[key] = 1
+        node = node.next
+
+
+    return wordDict
 
 
 if __name__ == '__main__':
@@ -18,11 +47,11 @@ if __name__ == '__main__':
         quit()
 
     #本来は引数から取得したいが、サンプルコードなのでURLはハードコーディング
-    #url = param[1]
+    url = param[1]
 
     #WEBサイトを取得
     #青空文庫のサイトからHTMLデータを取得する
-    url = "http://www.aozora.gr.jp/index_pages/person148.html"
+    #url = "http://www.aozora.gr.jp/index_pages/person148.html"
     res = req.urlopen(url)
     soup = BeautifulSoup(res, 'html.parser')
 
@@ -41,11 +70,7 @@ if __name__ == '__main__':
     print("----------h3のリスト----------")
     for s in soup.find_all("h3"): 
         print(s.text)
-            
-    #currentクラスタグの情報
-    print("----------1つ目のcurrentクラスの情報を取得する----------")
-    print(soup.select_one(".current").string)
-
+           
     #タグ以外の文字列のみ出力する（かなり汚いが・・・）
     print("----------タグ以外の全ての文字列----------")
     for s in soup(['script', 'style']):
@@ -53,3 +78,7 @@ if __name__ == '__main__':
         str = ' ' . join(soup.stripped_strings)
     print(str)
 
+    #文字解析
+    wordDict = morphological(str)
+    sortedDict = sorted(wordDict.items(),key=lambda x: x[1])
+    print (sortedDict)
