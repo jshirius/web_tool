@@ -55,6 +55,15 @@ if __name__ == '__main__':
     res = req.urlopen(url)
     soup = BeautifulSoup(res, 'html.parser')
 
+    #タイトル
+    print("----------タイトル----------")
+    title = soup.find("title")
+    print(title.text)
+
+    #URL
+    print("----------URL----------")
+    print(url)    
+
     #全てのh1タグのテキストを取得する
     print("----------h1のリスト----------")
     for s in soup.find_all("h1"): 
@@ -75,10 +84,24 @@ if __name__ == '__main__':
     print("----------タグ以外の全ての文字列----------")
     for s in soup(['script', 'style']):
         s.decompose()
-        str = ' ' . join(soup.stripped_strings)
-    print(str)
+        data = "\n" . join(soup.stripped_strings)
+    
+    print(data)
 
     #文字解析
-    wordDict = morphological(str)
-    sortedDict = sorted(wordDict.items(),key=lambda x: x[1])
-    print (sortedDict)
+    wordDict = morphological(data)
+    sortedDict = sorted(wordDict.items(),key=lambda x: -x[1])
+    #print (sortedDict)
+    #見やすくする
+
+    print("----------キーワード一覧----------")
+    datas = ''
+    for k, v in sortedDict:
+        value = str(v)
+        datas +=  '(' + k + ' ' + value + ') '
+       
+        #print(k, v)
+    print(datas)
+
+
+
