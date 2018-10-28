@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+from datetime import datetime
 import csv
 import sys
 import urllib.request as req
 
 u"""
-リンクリスト取得ツール
-出力はCSVファイル(ファイル名：「タイトル」＋リンクリスト_日時.csv」)にて
-第１引数 調べる階層 最小1より
+指定したWEBサイトのリンクリスト取得ツール
+結果はCSVファイル(ファイル名：linkList_日時.csv」)に出力します。
+第１引数 調べる階層 最小1より(現在は未実装)
 第２引数　調べるサイトのURL(ダブルクフォーテーションで括る)
 """
 
@@ -24,7 +25,7 @@ def get_link_lists(url):
     for s in soup.find_all("a"): 
         wordDict = {}
 
-        #url
+        #リンク取得
         link = s.get("href")
 
         if(link[0] == '/'):
@@ -68,9 +69,9 @@ if __name__ == '__main__':
     linkLists = get_link_lists(url)
 
 
-
-    #ファイル書き込み
-    with open('test.csv', 'w') as csv_file:
+    #CSVファイル書き込み
+    filename = "linkList_" + datetime.now().strftime("%Y%m%d") + ".csv"
+    with open(filename, 'w') as csv_file:
         fieldnames = LinkColumnName
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
