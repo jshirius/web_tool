@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse
 import urllib.request as req
 import sys
 import MeCab
@@ -79,7 +80,26 @@ if __name__ == '__main__':
     print("----------h3のリスト----------")
     for s in soup.find_all("h3"): 
         print(s.text)
-           
+
+
+    #リンクリストを出力する
+    print("----------リンクのリスト----------")
+    for s in soup.find_all("a"): 
+        #print(s.text)  
+        #URL取得部分 https://www.python.ambitious-engineer.com/archives/35
+        #url
+        link = s.get("href")
+        if(link is None):
+            continue
+
+        if(link[0] == '/'):
+            parsed_url = urlparse(url)
+            link = parsed_url.scheme + "://" +parsed_url.netloc + link
+        
+        # /staff_entry/jobs/city/13のように「http,https」から始まらないケースがあるよって、ドメイン名取得しておく
+        print(s.text + "  "+  link)
+
+
     #タグ以外の文字列のみ出力する（かなり汚いが・・・）
     print("----------タグ以外の全ての文字列----------")
     for s in soup(['script', 'style']):
@@ -87,6 +107,9 @@ if __name__ == '__main__':
         data = "\n" . join(soup.stripped_strings)
     
     print(data)
+
+
+
 
     #文字解析
     wordDict = morphological(data)
