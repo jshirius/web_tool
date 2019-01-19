@@ -65,6 +65,15 @@ if __name__ == '__main__':
     print("----------URL----------")
     print(url)    
 
+    #description
+    print("----------Description----------") 
+    og_img = soup.find('meta', attrs={'property': 'og:description', 'content': True})
+    if og_img is not None:
+        print(og_img['content'])
+    else:
+        print('Not found og:description tag')    
+    
+
     #全てのh1タグのテキストを取得する
     print("----------h1のリスト----------")
     for s in soup.find_all("h1"): 
@@ -101,12 +110,12 @@ if __name__ == '__main__':
 
 
     #タグ以外の文字列のみ出力する（かなり汚いが・・・）
-    print("----------タグ以外の全ての文字列----------")
+    #print("----------タグ以外の全ての文字列----------")
     for s in soup(['script', 'style']):
         s.decompose()
         data = "\n" . join(soup.stripped_strings)
     
-    print(data)
+    #print(data)
 
 
 
