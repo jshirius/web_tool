@@ -67,9 +67,9 @@ if __name__ == '__main__':
 
     #description
     print("----------Description----------") 
-    og_img = soup.find('meta', attrs={'property': 'og:description', 'content': True})
-    if og_img is not None:
-        print(og_img['content'])
+    og_des = soup.find('meta', attrs={'property': 'og:description', 'content': True})
+    if og_des is not None:
+        print(og_des['content'])
     else:
         print('Not found og:description tag')    
     
