@@ -7,6 +7,9 @@ import sys
 from selenium import webdriver
 import pandas as pd
 from time import sleep
+import twitter
+from urllib.parse import urlencode
+
 
 ##########################
 #設定関連
@@ -14,6 +17,12 @@ from time import sleep
 PAGE_LIMIT = 2 #ページ遷移の最大の回数
 SQRAPING_URL = "https://chiebukuro.yahoo.co.jp/"
 csv_file_name_format = "matome_%s.csv"
+
+#twitterの設定
+CONSUMER_KEY = ''
+CONSUMER_SECRET = ''
+ACCESS_TOKEN = ''
+ACCESS_TOKEN_SECRET = ''
 
 
 #デバイスをオープンする
@@ -138,7 +147,36 @@ def google_result(target_keyword):
     return out_puts
 
 #twitterAPI
+def twitter_matome(target_keyword):
 
+    print("twitter_matome開始")
+    #Twitter APIにアクセスする
+    api = twitter.Api(consumer_key=CONSUMER_KEY,
+                    consumer_secret=CONSUMER_SECRET,
+                    access_token_key=ACCESS_TOKEN,
+                    access_token_secret=ACCESS_TOKEN_SECRET)
+
+    query = urlencode({
+        'q': target_keyword,  # 検索ワード
+        'result_type': 'recent',  # recent/popular/mixed
+        'count': 100  # 取得するツイート数（100が最大）
+    # 'max_id':  これを利用して更に過去の情報を取れる
+    })
+
+    result = api.GetSearch(raw_query=query)
+    #print(result)
+    out_puts = []
+    for status in result:
+        out_dic ={}
+        url = "https://twitter.com/%s/status/%s" %(status.user.screen_name, str(status.id))
+        out_dic['source'] = "twitter_matome"
+        out_dic['query_key'] = target_keyword
+        out_dic['rs_title'] = status.user.name
+        out_dic['rs_link']  = url
+        out_dic['rs_summary'] = status.text
+        out_puts.append(out_dic)
+    
+    return out_puts
 
 if __name__ == '__main__':
     
@@ -165,5 +203,10 @@ if __name__ == '__main__':
     df.to_csv(csv_file_name, encoding="utf_8_sig")
 
     #twitter api
+    d = twitter_matome(target_keyword)
+    analysis_list.extend(d)
+    df=pd.DataFrame(analysis_list) 
+    df.to_csv(csv_file_name, encoding="utf_8_sig")
+
 
     driver.close()
