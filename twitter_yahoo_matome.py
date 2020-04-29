@@ -13,6 +13,8 @@ from time import sleep
 ##########################
 PAGE_LIMIT = 2 #ページ遷移の最大の回数
 SQRAPING_URL = "https://chiebukuro.yahoo.co.jp/"
+csv_file_name_format = "matome_%s.csv"
+
 
 #デバイスをオープンする
 driver = webdriver.Chrome('./chromedriver')
@@ -30,6 +32,7 @@ def analysis_action(target_keyword):
     else:
         for elem in elems:
             out_dic ={}
+            out_dic['source'] = "知恵袋"
             out_dic['query_key'] = target_keyword
             out_dic['rs_title'] = elem.find_elements_by_xpath('h3/a')[0].text
             out_dic['rs_link']  = elem.find_elements_by_xpath('h3/a')[0].get_attribute('href')
@@ -122,6 +125,7 @@ def google_result(target_keyword):
         title = elem.find_elements_by_xpath('h3')[0].text
 
         out_dic ={}
+        out_dic['source'] = "google検索"
         out_dic['query_key'] = target_keyword
         out_dic['rs_title'] = title
         out_dic['rs_link']  = url
@@ -149,7 +153,17 @@ if __name__ == '__main__':
 
     #yahoo知恵袋の結果を返す
     analysis_list = chiebukuro_yahoo(target_keyword)
-    google_result(target_keyword)
+    csv_file_name = csv_file_name_format % target_keyword
+
+    df=pd.DataFrame(analysis_list) 
+    df.to_csv(csv_file_name, encoding="utf_8_sig")
+
+    #Gooleの結果
+    d = google_result(target_keyword)
+    analysis_list.extend(d)
+    df=pd.DataFrame(analysis_list) 
+    df.to_csv(csv_file_name, encoding="utf_8_sig")
+
+    #twitter api
 
     driver.close()
-    
