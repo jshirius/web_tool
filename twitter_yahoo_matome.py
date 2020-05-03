@@ -24,7 +24,6 @@ CONSUMER_SECRET = ''
 ACCESS_TOKEN = ''
 ACCESS_TOKEN_SECRET = ''
 
-
 #デバイスをオープンする
 driver = webdriver.Chrome('./chromedriver')
 
@@ -190,23 +189,31 @@ if __name__ == '__main__':
     print(target_keyword)
 
     #yahoo知恵袋の結果を返す
+    columns = ["source",'query_key','rs_title','rs_summary','rs_link']
     analysis_list = chiebukuro_yahoo(target_keyword)
     csv_file_name = csv_file_name_format % target_keyword
 
-    df=pd.DataFrame(analysis_list) 
+    df=pd.DataFrame(analysis_list, columns=columns) 
     df.to_csv(csv_file_name, encoding="utf_8_sig")
 
     #Gooleの結果
-    d = google_result(target_keyword)
-    analysis_list.extend(d)
-    df=pd.DataFrame(analysis_list) 
-    df.to_csv(csv_file_name, encoding="utf_8_sig")
-
+    try:
+        print("Googleの結果の検索開始します")
+        d = google_result(target_keyword)
+        analysis_list.extend(d)
+        df=pd.DataFrame(analysis_list, columns=columns) 
+        df.to_csv(csv_file_name, encoding="utf_8_sig")
+    except Exception as e:
+        print(e)
+        
     #twitter api
-    d = twitter_matome(target_keyword)
-    analysis_list.extend(d)
-    df=pd.DataFrame(analysis_list) 
-    df.to_csv(csv_file_name, encoding="utf_8_sig")
-
+    try:
+        print("Twitterの結果の検索開始します")
+        d = twitter_matome(target_keyword)
+        analysis_list.extend(d)
+        df=pd.DataFrame(analysis_list, columns=columns) 
+        df.to_csv(csv_file_name, encoding="utf_8_sig")
+    except Exception as e:
+        print(e)
 
     driver.close()
