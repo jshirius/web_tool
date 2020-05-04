@@ -18,6 +18,12 @@ PAGE_LIMIT = 2 #ページ遷移の最大の回数
 SQRAPING_URL = "https://chiebukuro.yahoo.co.jp/"
 csv_file_name_format = "matome_%s.csv"
 
+#教えてGOO関係
+GOO_PAGE_LIMIT = 2
+GOO_SQRAPING_URL = "https://oshiete.goo.ne.jp/search_goo/result/?MT=%s&code=utf8&pg=%d"
+
+
+
 #twitterの設定
 CONSUMER_KEY = ''
 CONSUMER_SECRET = ''
@@ -118,6 +124,42 @@ def chiebukuro_yahoo(target_keyword):
     print(analysis_list)
     return analysis_list
 
+
+#該当ページを解析する
+def goo_analysis_action(target_keyword):
+
+    elems = driver.find_elements_by_xpath('//*[@id="main"]/div/div[2]/section/div/div[3]/section')
+    # 取得した要素を1つずつ表示
+
+    out_puts = []
+    print(len(elems))
+    if(len(elems) == 0):
+        print("ページは存在しないよ〜")
+    else:
+        for elem in elems:
+            #print(elem)
+            out_dic ={}
+            out_dic['source'] = "教えてGoo"
+            out_dic['query_key'] = target_keyword
+            out_dic['rs_title'] = elem.find_elements_by_xpath('div/h2/a')[0].text
+            out_dic['rs_link']  = elem.find_elements_by_xpath('div/h2/a')[0].get_attribute('href')
+            out_dic['rs_summary'] = elem.find_elements_by_xpath('div/p')[0].text
+            out_puts.append(out_dic)
+            
+    return out_puts
+
+#教えて！goo
+def oshiete_goo(target_keyword):
+    #知恵袋ページを読み込む
+    analysis_list = []
+    for i in range(GOO_PAGE_LIMIT):
+        url = GOO_SQRAPING_URL %(target_keyword, i)
+        sleep(5)
+        driver.get(url)
+        d = goo_analysis_action(target_keyword)
+        analysis_list.extend(d)
+    return analysis_list
+
 #Google検索
 def google_result(target_keyword):
     url = 'https://www.google.com/search?q={}'.format(target_keyword)
@@ -195,6 +237,19 @@ if __name__ == '__main__':
 
     df=pd.DataFrame(analysis_list, columns=columns) 
     df.to_csv(csv_file_name, encoding="utf_8_sig")
+
+    #教えてgooの疑問結果を返す
+    #Gooleの結果
+    try:
+        print("教えて！Gooの結果の検索開始します")
+        d = oshiete_goo(target_keyword)
+        analysis_list.extend(d)
+        df=pd.DataFrame(analysis_list, columns=columns) 
+        df.to_csv(csv_file_name, encoding="utf_8_sig")
+    except Exception as e:
+        print(e)
+
+
 
     #Gooleの結果
     try:
