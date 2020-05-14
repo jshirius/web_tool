@@ -97,13 +97,16 @@ if __name__ == '__main__':
         #print(s.text)  
         #URL取得部分 https://www.python.ambitious-engineer.com/archives/35
         #url
-        link = s.get("href")
-        if(link is None):
-            continue
+        try:
+            link = s.get("href")
+            if(link is None):
+                continue
 
-        if(link[0] == '/'):
-            parsed_url = urlparse(url)
-            link = parsed_url.scheme + "://" +parsed_url.netloc + link
+            if(link[0] == '/'):
+                parsed_url = urlparse(url)
+                link = parsed_url.scheme + "://" +parsed_url.netloc + link
+        except:
+            continue
         
         # /staff_entry/jobs/city/13のように「http,https」から始まらないケースがあるよって、ドメイン名取得しておく
         print(s.text + "  "+  link)
