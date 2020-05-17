@@ -92,10 +92,15 @@ def main():
     X_count = count_vectorizer.fit_transform(corpus)
 
     # 見やすさのために表示するときは pandas のデータフレームにする
-    df = pd.DataFrame(data=X_count.toarray(),
-                      columns=count_vectorizer.get_feature_names())
+    df = pd.DataFrame(data=X_count.toarray().T,
+                      index=count_vectorizer.get_feature_names(),
+                      columns=[i[0] for i in site_list],
+                      )
+    #df = pd.DataFrame(data=X_count.toarray(),
+    #                  columns=count_vectorizer.get_feature_names())
     print('--- BoW (Bag of Words) ---')
     print(df)
+    df.to_csv("scraping_list_words.csv",encoding='utf_8_sig' )
 
     # scikit-learn の TF-IDF 実装
     tfidf_vectorizer = TfidfVectorizer()
@@ -109,8 +114,12 @@ def main():
 
     # TF-IDF を表示する
     print('--- TF-IDF ---')
-    df = pd.DataFrame(data=X_tfidf.toarray(),
-                      columns=tfidf_vectorizer.get_feature_names())
+    #df = pd.DataFrame(data=X_tfidf.toarray(),
+    #                  columns=tfidf_vectorizer.get_feature_names())
+    df = pd.DataFrame(data=X_tfidf.toarray().T,
+                      index=tfidf_vectorizer.get_feature_names(),
+                      columns=[i[0] for i in site_list],
+                      )
     print(df)
     #ファイルに書き出す
     df.to_csv("scraping_list_tfidf.csv",encoding='utf_8_sig' )
