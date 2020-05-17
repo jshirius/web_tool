@@ -67,10 +67,10 @@ def scraping_main(url:str, all_text_mode = False):
     out_dict["text"]  = ""
     for s in soup(['script', 'style']):
         s.decompose()
-        data = "\n" . join(soup.stripped_strings)
-        out_dict["text"]  = out_dict["text"]  + data
-        #print(data)
-    #print(data)
+    text=soup.get_text()
+    lines= [line.strip() for line in text.splitlines() if len(line.strip())>1]
+    out_dict["text"]  = "\n" . join(lines)
+    print(out_dict["text"])
     
     return out_dict
 
@@ -108,8 +108,6 @@ def main():
 
     #csvに出力する
     df = df.to_csv("scraping_list_result.csv",encoding='utf_8_sig' )
-
-
 
 
 
