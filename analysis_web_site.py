@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 import urllib.request as req
 import sys
 import MeCab
+import pandas as pd
 
 u"""
 WEBコンテンツの分析ツール
@@ -92,6 +93,7 @@ if __name__ == '__main__':
 
 
     #リンクリストを出力する
+    df = pd.DataFrame(columns=["site_name","url"])
     print("----------リンクのリスト----------")
     for s in soup.find_all("a"): 
         #print(s.text)  
@@ -105,12 +107,19 @@ if __name__ == '__main__':
             if(link[0] == '/'):
                 parsed_url = urlparse(url)
                 link = parsed_url.scheme + "://" +parsed_url.netloc + link
+
+                
         except:
             continue
         
         # /staff_entry/jobs/city/13のように「http,https」から始まらないケースがあるよって、ドメイン名取得しておく
+        df2 = pd.Series()
+        df2['site_name'] = s.text 
+        df2['url'] = link
+        df = df.append(df2, ignore_index=True)
         print(s.text + "  "+  link)
 
+    df.to_csv("web_linklist.csv" ,encoding="utf_8_sig")
 
     #タグ以外の文字列のみ出力する（かなり汚いが・・・）
     #print("----------タグ以外の全ての文字列----------")

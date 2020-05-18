@@ -2,7 +2,7 @@
 import pandas as pd
 from bs4 import BeautifulSoup
 import urllib.request as req
-
+import time
 
 def scraping_main(url:str, all_text_mode = False):
 
@@ -104,6 +104,8 @@ def main():
         df.loc[index,'h3'] = dict_data["h3"]
         df.loc[index,'h4'] = dict_data["h4"]
         df.loc[index,'text'] = dict_data["text"]
+        
+        time.sleep(2)
         
 
     #csvに出力する
