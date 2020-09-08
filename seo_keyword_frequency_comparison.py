@@ -166,6 +166,7 @@ def get_morpheme_janome(page_datas):
         data = morpheme_janome.text_morpheme(t,'名詞')
 
         #形態素単位の前処理
+        data = [i.lower() for i in data]
         data = st_tool.clean_keyword_list(data)
         #data = morpheme_janome.text_morpheme(t)
         if(len(data) == 0):
@@ -284,9 +285,9 @@ def main():
         #baseがあるか
         if(len(base_url_documents) > 0):
             if( info[0] in base_url_documents[0]):
-                mark_b = "▲"
+                mark_b = "▲ "
         
-        string = "%s %s, %ssite" % (mark_b, info[0], info[1])
+        string = "%s%s, %ssite" % (mark_b, info[0], info[1])
         print(string)
 
 
