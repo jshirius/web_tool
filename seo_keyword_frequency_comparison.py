@@ -26,7 +26,12 @@ import argparse
 #引数取得
 parser = argparse.ArgumentParser(description='検索上位10位までのキーワード出現回数を出力する(1サイト１回とする)')  
 parser.add_argument("-k", "--keyword",required=True,  help='対象のキーワードを設定')
+parser.add_argument("-u", "--baseurl",required=False,  help='比較対象のurl')
 args = parser.parse_args()
+
+#形態素の初期化
+morpheme_janome = JanomeDataSet('neologd')
+
 #print(args)
 
 #webドライバ初期化
@@ -150,6 +155,24 @@ def __page_scraping__( url:str):
     text  = "\n" . join(lines)
     return text
 
+def get_morpheme_janome(page_datas):
+    documents=[]
+
+    #形態素
+    #morpheme_janome = JanomeDataSet('neologd')
+    for t in page_datas:
+
+        #形態素に分ける
+        data = morpheme_janome.text_morpheme(t,'名詞')
+
+        #形態素単位の前処理
+        data = st_tool.clean_keyword_list(data)
+        #data = morpheme_janome.text_morpheme(t)
+        if(len(data) == 0):
+            continue
+        documents.append(set(data))
+        
+    return documents
 
 #webサイトを検索してキーワード一覽を取得する
 def read_web_site_words(target_keyword):
@@ -178,9 +201,12 @@ def read_web_site_words(target_keyword):
         page_datas.append(text)
 
 
-    documents=[]
+    
 
     #形態素
+    documents = get_morpheme_janome(page_datas)
+    """
+    documents=[]
     morpheme_janome = JanomeDataSet('neologd')
     for t in page_datas:
 
@@ -193,7 +219,7 @@ def read_web_site_words(target_keyword):
         if(len(data) == 0):
             continue
         documents.append(set(data))
-        
+    """
     return documents
 
 #WEBサイトのカウントする
@@ -235,14 +261,32 @@ def main():
     #-p キーワードリストのファイルpath (キーワードリストの比較)
     #上位10サイトにおいて、使われているキーワードの回数(1サイト1回としてカウント)を取得する
     #オプションとして使われていないキーワードの検出をする
+    print(args)
 
     #キーワード取得
     target_keyword = args.keyword
     results = get_keyword_web_site_count(target_keyword)
 
+    #ベースサイトありか
+    base_url_documents = []
+    if(args.baseurl != None):
+        #比較元サイトの取得
+        page_datas = __page_scraping__(args.baseurl)
+        page_datas = st_tool.format_text(page_datas)
+        base_url_documents = get_morpheme_janome([page_datas])
+
+        print("base_url_documents")
+        print(base_url_documents)
+
     #結果を出力する
     for info in results:
-        string = "%s, %ssite" % (info[0], info[1])
+        mark_b = ""
+        #baseがあるか
+        if(len(base_url_documents) > 0):
+            if( info[0] in base_url_documents[0]):
+                mark_b = "▲"
+        
+        string = "%s %s, %ssite" % (mark_b, info[0], info[1])
         print(string)
 
 
