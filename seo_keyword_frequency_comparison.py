@@ -31,7 +31,7 @@ args = parser.parse_args()
 
 #形態素の初期化
 morpheme_janome = JanomeDataSet('neologd')
-
+#morpheme_janome = JanomeDataSet()  #デバッグ用
 #print(args)
 
 #webドライバ初期化
@@ -55,7 +55,7 @@ def __google_search__( target_keyword):
     out_put = __google_result__(url, target_keyword)
     out_puts.extend(out_put)
     
-    #print(out_puts)
+    print(out_puts)
     page_limit = 1
     sleep(2)
     try:
@@ -95,7 +95,7 @@ def __google_result__( url, target_keyword):
     time.sleep(2)
     
 
-    elems = driver.find_elements_by_xpath('//*[@id="rso"]/div[*]/div/div[1]/a')
+    elems = driver.find_elements_by_xpath('//*[@id="rso"]/div[*]/div/div/div[1]/a')
     out_puts = []
     for elem in elems:
         url = elem.get_attribute('href')
@@ -237,6 +237,7 @@ def get_keyword_web_site_count( target_keyword):
     #webサイトを検索してキーワード一覽を取得する
     web_sites = read_web_site_words(target_keyword)
 
+    print(web_sites)
     keyword_dict = {}
     for keyword_list in web_sites:
         
