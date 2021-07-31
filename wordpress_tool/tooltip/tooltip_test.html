@@ -1,0 +1,21 @@
+<html>
+
+<head>
+<!-- jqureryを呼び出す -->
+<script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+
+<!-- cssを呼び出す。このcssはtooltipのレイアウトを整えるために使用する。-->
+<!--なお大本のadminlte.cssをそのまま反映させると、競合する可能性があるためtooltipとは無関係のものを削除すること -->
+<link rel="stylesheet" href="./adminlte_for_tooltip.css">
+</head>
+
+<body>
+<p >ほれほれ<span class="far" data-toggle="tooltip" data-original-title="tooltipが表示されたでしょ"  style="color:#ff0000;">ここをマウスオーバー</span>してみな。</p>
+</body>
+
+<!-- tooltipを制御するために以下のスクリプトを呼び出す -->
+<script src="./bootstrap.bundle.min.js"></script>
+<script>
+    $('[data-toggle="tooltip"]').tooltip();
+</script>
+</html>
