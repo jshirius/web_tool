@@ -27,3 +27,8 @@ adminlteに同梱されているbootstrapのjsファイル。
 参考サイト：
 adminlte
 https://adminlte.io/docs/2.4/license
+
+
+■wordpressに反映させる際
+
+・「Simple Custom CSS and JS」プラグインを利用して、自作のCSS,JSを反映できるようにしておく
