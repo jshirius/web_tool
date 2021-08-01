@@ -178,34 +178,44 @@ def get_morpheme_janome(page_datas):
 def add_blog_info(soup, blog_info_dict):
 
     #description
-    print("----------Description----------") 
     og_des = soup.find('meta', attrs={'property': 'og:description', 'content': True})
     if og_des is not None:
-        print(og_des['content'])
-        blog_info_dict["description"] = og_des['content']
+        #print(og_des['content'])
+        t = og_des['content'].replace(" ", "")
+        blog_info_dict["description"] = t
     else:
         print('Not found og:description tag')    
     
 
     #全てのh1タグのテキストを取得する
-    print("----------h1のリスト----------")
     temp_list = []
     for s in soup.find_all("h1"): 
-        print(s.text)
-        temp_list.append(s.text)
+        t = s.text.replace(" ", "")
+        if(len(t) > 0):
+            temp_list.append(t)
     blog_info_dict["h1"] = "\n" .join(temp_list)
 
     #全てのh2タグのテキストを取得する
-    print("----------h2のリスト----------")
+    temp_list = []
     for s in soup.find_all("h2"): 
-        print(s.text)
+        t = s.text.replace(" ", "")
+        if(len(t) > 0):
+            temp_list.append(t)
+    blog_info_dict["h2"] = "\n" .join(temp_list)
         
 
     #全てのh3タグのテキストを取得する       
-    print("----------h3のリスト----------")
     for s in soup.find_all("h3"): 
-        print(s.text)
+        t = s.text.replace(" ", "")
+        if(len(t) > 0):
+            temp_list.append(t)
+    blog_info_dict["h3"] = "\n" .join(temp_list)
 
+    for s in soup.find_all("h4"): 
+        t = s.text.replace(" ", "")
+        if(len(t) > 0):
+            temp_list.append(t)
+    blog_info_dict["h4"] = "\n" .join(temp_list)
 
     return blog_info_dict
 
@@ -256,7 +266,7 @@ def read_web_site_words(target_keyword):
     data_f = pd.concat([df, pd.DataFrame(blog_info_list)], axis=1)
 
     csv_file_name = target_keyword + "_webdata" + ".csv"
-    data_f.to_csv(csv_file_name, encoding="utf_8_sig")
+    data_f.to_csv(csv_file_name, encoding="utf_8_sig", line_terminator='\n')
     
     #形態素
     documents = get_morpheme_janome(page_datas)
