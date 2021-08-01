@@ -153,7 +153,7 @@ def __page_scraping__( url:str):
     text=soup.get_text()
     lines= [line.strip() for line in text.splitlines() if len(line.strip())>1]
     text  = "\n" . join(lines)
-    return text
+    return soup, text
 
 def get_morpheme_janome(page_datas):
     documents=[]
@@ -175,6 +175,40 @@ def get_morpheme_janome(page_datas):
         
     return documents
 
+def add_blog_info(soup, blog_info_dict):
+
+    #description
+    print("----------Description----------") 
+    og_des = soup.find('meta', attrs={'property': 'og:description', 'content': True})
+    if og_des is not None:
+        print(og_des['content'])
+        blog_info_dict["description"] = og_des['content']
+    else:
+        print('Not found og:description tag')    
+    
+
+    #全てのh1タグのテキストを取得する
+    print("----------h1のリスト----------")
+    temp_list = []
+    for s in soup.find_all("h1"): 
+        print(s.text)
+        temp_list.append(s.text)
+    blog_info_dict["h1"] = "\n" .join(temp_list)
+
+    #全てのh2タグのテキストを取得する
+    print("----------h2のリスト----------")
+    for s in soup.find_all("h2"): 
+        print(s.text)
+        
+
+    #全てのh3タグのテキストを取得する       
+    print("----------h3のリスト----------")
+    for s in soup.find_all("h3"): 
+        print(s.text)
+
+
+    return blog_info_dict
+
 #webサイトを検索してキーワード一覽を取得する
 def read_web_site_words(target_keyword):
     
@@ -187,23 +221,43 @@ def read_web_site_words(target_keyword):
     search_lists = __get_google_search_data__(target_keyword)
     df=pd.DataFrame(search_lists, columns=columns) 
 
+    #処理リスト
+    print("処理リスト")
+    print(df)
+
     #pageデータ取得
     page_datas = []
+
+    #blog_info
+    blog_info_base = {"h1":"","h2":"","h3":"","h4":"","description":""}
+    blog_info_list =[]
     for index, row in df.iterrows():
         try:
-            text = __page_scraping__(row['rs_link'])
+            blog_info_dict = blog_info_base.copy()
+
+            #スクレイピングデータ
+            soup, text = __page_scraping__(row['rs_link'])
+
+            #BeautifulSoupを使って追加情報を取得
+            blog_info_dict = add_blog_info(soup, blog_info_dict)
         
         except Exception as e:
             print(e)    
             continue
+    
+        finally:
+            blog_info_list.append(blog_info_dict)
             
         #前処理
         text = st_tool.format_text(text)
         page_datas.append(text)
 
 
-    
+    data_f = pd.concat([df, pd.DataFrame(blog_info_list)], axis=1)
 
+    csv_file_name = target_keyword + "_webdata" + ".csv"
+    data_f.to_csv(csv_file_name, encoding="utf_8_sig")
+    
     #形態素
     documents = get_morpheme_janome(page_datas)
     """
