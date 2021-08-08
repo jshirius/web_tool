@@ -205,12 +205,14 @@ def add_blog_info(soup, blog_info_dict):
         
 
     #全てのh3タグのテキストを取得する       
+    temp_list = []
     for s in soup.find_all("h3"): 
         t = s.text.replace(" ", "")
         if(len(t) > 0):
             temp_list.append(t)
     blog_info_dict["h3"] = "\n" .join(temp_list)
 
+    temp_list = []
     for s in soup.find_all("h4"): 
         t = s.text.replace(" ", "")
         if(len(t) > 0):
