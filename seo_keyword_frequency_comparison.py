@@ -177,6 +177,10 @@ def get_morpheme_janome(page_datas):
 
 def add_blog_info(soup, blog_info_dict):
 
+    #title
+    title = soup.find('title').text
+    blog_info_dict["title"] = title
+    
     #description
     og_des = soup.find('meta', attrs={'property': 'og:description', 'content': True})
     if og_des is not None:
