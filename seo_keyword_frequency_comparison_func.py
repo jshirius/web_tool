@@ -74,7 +74,6 @@ def google_search(driver,  target_keyword, page_limit = 1):
 
 #Google検索
 def __google_result__(driver,  url, target_keyword):
-    #多分いらない
     """ページごとの検索結果(タイトル、urlなど)を取得する
 
     Args:
@@ -209,14 +208,14 @@ def page_scraping( url:str, colum_name:str):
             if("h1" == elem.name or"h2" == elem.name or "h3" == elem.name or "h4" == elem.name):
                 if("h1" == elem.name ) :h1_flag = True
                 if(h1_flag == True):
-                    text = elem.text.replace("\n","")
+                    text = elem.text.replace("\n","").replace("\t","")
                     
                     h = re.sub(r"\D", "", elem.name)
                     h = int(h) - 1
                     
                     
                     
-                    t = "%s %s" % ("-" * h,text)
+                    t = "%s %s" % ("■" * h,text)
                     data_list.append(t)
     df = pd.DataFrame(data_list)
     df.columns = [colum_name]
@@ -233,114 +232,78 @@ def __get_keyword_count(soup):
 
     return datas
 
-
-#webサイトを検索してキーワード一覽を取得する
-def read_web_site_words(target_keyword):
-    
-    #########################################
-    #googleから元のデータを取りに行く
-    #########################################
-
-    #リスト取得
-    columns = ["source",'query_key','rs_title','rs_summary','rs_link']
-    search_lists = __get_google_search_data__(target_keyword)
-    df=pd.DataFrame(search_lists, columns=columns) 
-
-    #処理リスト
-    print("処理リスト")
-    print(df)
-
-    #pageデータ取得
-    page_datas = []
-
-    #blog_info
-    blog_info_base = {"h1":"","h2":"","h3":"","h4":"","description":""}
-    blog_info_list =[]
-    for index, row in df.iterrows():
-        try:
-            blog_info_dict = blog_info_base.copy()
-
-            #スクレイピングデータ
-            soup, text = __page_scraping__(row['rs_link'])
+def _get_site_infos_detail(base_url, sites ):
+    #URLリストからサイト個別情報を取り出す
 
 
+    #検索順位の確認
+    base_url_rank = 0
+    for i , site_info in enumerate(sites):
         
-        except Exception as e:
-            print(e)    
-            continue
-    
-        finally:
-            blog_info_list.append(blog_info_dict)
+        if(base_url in site_info['rs_link']):
+            #ランキング存在した
+            base_url_rank = i + 1
+            break
             
-        #前処理
-        text = st_tool.format_text(text)
-        page_datas.append(text)
+    #自分のサイトの情報を取り出す
+    t = "圏外"
+    if(base_url_rank > 0):
+        t = "%d位" % base_url_rank
+        
+    text = "元サイト(ランキング:%s)" % t
+    label_df = get_index_lable()
+    df = page_scraping(base_url, text)
+    df_summary = pd.concat([label_df,df ], axis=1)
 
-
-    data_f = pd.concat([df, pd.DataFrame(blog_info_list)], axis=1)
-
-    csv_file_name = target_keyword + "_webdata" + ".csv"
-    data_f.to_csv(csv_file_name, encoding="utf_8_sig", line_terminator='\n')
-    
-    #形態素
-    documents = get_morpheme_janome(page_datas)
-    """
-    documents=[]
-    morpheme_janome = JanomeDataSet('neologd')
-    for t in page_datas:
-
-        #形態素に分ける
-        data = morpheme_janome.text_morpheme(t,'名詞')
-
-        #形態素単位の前処理
-        data = st_tool.clean_keyword_list(data)
-        #data = morpheme_janome.text_morpheme(t)
-        if(len(data) == 0):
+    #競合10サイト情報
+    limit = 10
+    for i , site_info in enumerate(sites):
+        if(i >= limit):
+            #リミット超えた
+            break
+            
+        #自分のサイトか
+        if(base_url in site_info['rs_link']):
             continue
-        documents.append(set(data))
-    """
-    return documents
+            
+        print(site_info)
+        t = "競合 %d位" % (i+1)
+        try:
+            df = page_scraping(site_info['rs_link'], t)
+            df_summary = pd.concat([df_summary,df ], axis=1)
+        except Exception as e:
+            print("個別情報取得エラー", i)
+            print(e, site_info)    
 
-#WEBサイトのカウントする
-def get_keyword_web_site_count( target_keyword):
+    return df_summary
+
+#WEBサイトの情報を取り出す
+def get_keyword_web_info(base_url,  target_keyword):
     """ターゲットキーワードを元に10サイトからキーワードを取得する
 
     Args:
+        base_url:ベースになるURL
         target_keyword ([type]):検索キーワード
 
     Returns:
         [list]: キーワードのリスト(使われているサイト数の情報)
     """
 
-    #webサイトを検索してキーワード一覽を取得する
-    web_sites = read_web_site_words(target_keyword)
-
-    print(web_sites)
-    keyword_dict = {}
-    for keyword_list in web_sites:
-        
-        for keyword in keyword_list:
-            #存在するか
-            if(keyword in keyword_dict):
-                keyword_dict[keyword] = keyword_dict[keyword] + 1
-            else:
-                keyword_dict[keyword] = 1
-
-
-    sorted_patterns = sorted(keyword_dict.items(),reverse=True,key=lambda x:x[1])
-    #2以上のみ出す
-    #sorted_patterns = [i for i in sorted_patterns if i[1]>1]
-    #pprint.pprint(sorted_patterns)
-    return sorted_patterns
-
-def main():
-
     #webドライバ初期化
     driver = webdriver.Chrome('./chromedriver')
 
+    #google検索は３ページまで遷移する
+    sites = google_search(driver,target_keyword, 3)
+    df_summary = _get_site_infos_detail(base_url, sites )
 
+    df_summary.to_csv("smmary.csv", encoding='utf_8_sig')
+    driver.quit()
+
+    return df_summary
+
+def main():
     #引数取得
-    parser = argparse.ArgumentParser(description='検索上位10位までのキーワード出現回数を出力する(1サイト１回とする)')  
+    parser = argparse.ArgumentParser(description='競合10サイトの比較をする')  
     parser.add_argument("-k", "--keyword",required=True,  help='対象のキーワードを設定')
     parser.add_argument("-u", "--baseurl",required=False,  help='比較対象のurl')
     args = parser.parse_args()
@@ -354,31 +317,8 @@ def main():
 
     #キーワード取得
     target_keyword = args.keyword
-    results = get_keyword_web_site_count(target_keyword)
+    results = get_keyword_web_info(args.baseurl, args.keyword)
 
-    #ベースサイトありか
-    base_url_documents = []
-    if(args.baseurl != None):
-        #比較元サイトの取得
-        page_datas = __page_scraping__(args.baseurl)
-        page_datas = st_tool.format_text(page_datas)
-        base_url_documents = get_morpheme_janome([page_datas])
-
-        print("base_url_documents")
-        print(base_url_documents)
-
-    #結果を出力する
-    for info in results:
-        mark_b = ""
-        #baseがあるか
-        if(len(base_url_documents) > 0):
-            if( info[0] in base_url_documents[0]):
-                mark_b = "▲ "
-        
-        string = "%s%s, %ssite" % (mark_b, info[0], info[1])
-        print(string)
-
-
-    driver.quit()
+    
 if __name__=='__main__':
     main()
