@@ -273,7 +273,23 @@ def _get_site_infos_detail(base_url, sites ):
             df_summary = pd.concat([df_summary,df ], axis=1)
         except Exception as e:
             print("個別情報取得エラー", i)
-            print(e, site_info)    
+            print(e, site_info)
+
+            #補填する
+            data_list = []
+            #タイトル
+            data_list.append(site_info['rs_title'])
+            data_list.append(site_info['rs_link'])
+            data_list.append("情報なし")
+            data_list.append("情報なし")
+            data_list.append("情報なし")
+            data_list.append("")
+            data_list.append("情報なし")
+            df = pd.DataFrame(data_list)
+            df.columns = [t]
+            df_summary = pd.concat([df_summary,df ], axis=1)
+
+
 
     return df_summary
 
@@ -296,7 +312,8 @@ def get_keyword_web_info(base_url,  target_keyword):
     sites = google_search(driver,target_keyword, 3)
     df_summary = _get_site_infos_detail(base_url, sites )
 
-    df_summary.to_csv("smmary.csv", encoding='utf_8_sig')
+    file_name = "「%s」の検索結果.csv" % target_keyword
+    df_summary.to_csv(file_name, encoding='utf_8_sig', index = False)
     driver.quit()
 
     return df_summary
@@ -305,7 +322,7 @@ def main():
     #引数取得
     parser = argparse.ArgumentParser(description='競合10サイトの比較をする')  
     parser.add_argument("-k", "--keyword",required=True,  help='対象のキーワードを設定')
-    parser.add_argument("-u", "--baseurl",required=False,  help='比較対象のurl')
+    parser.add_argument("-u", "--baseurl",required=True,  help='比較対象のurl')
     args = parser.parse_args()
 
     #引数を取得する
