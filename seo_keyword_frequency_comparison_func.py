@@ -36,7 +36,7 @@ morpheme_janome = JanomeDataSet()
 
 
 
-def __google_search__( target_keyword):
+def google_search(driver,  target_keyword, page_limit = 1):
     """google検索を使って該当データを取得する(ページ遷移する)
 
     Args:
@@ -49,11 +49,10 @@ def __google_search__( target_keyword):
     
     #一回目の検索
     url = 'https://www.google.com/search?q={}&safe=off'.format(target_keyword)
-    out_put = __google_result__(url, target_keyword)
+    out_put = __google_result__(driver, url, target_keyword)
     out_puts.extend(out_put)
     
-    print(out_puts)
-    page_limit = 1
+    #print(out_puts)
     sleep(2)
     try:
         for i in range(page_limit - 1):
@@ -65,7 +64,7 @@ def __google_search__( target_keyword):
             url = elem.get_attribute('href')
 
             #２ページ以降の処理
-            out_put = __google_result__(url, target_keyword)
+            out_put = __google_result__(driver, url, target_keyword)
             out_puts.extend(out_put)
             sleep(2.1)
     except  Exception as e:
@@ -74,7 +73,8 @@ def __google_search__( target_keyword):
     return out_puts
 
 #Google検索
-def __google_result__( url, target_keyword):
+def __google_result__(driver,  url, target_keyword):
+    #多分いらない
     """ページごとの検索結果(タイトル、urlなど)を取得する
 
     Args:
@@ -92,10 +92,14 @@ def __google_result__( url, target_keyword):
     time.sleep(2)
     
 
-    elems = driver.find_elements_by_xpath('//*[@id="rso"]/div[*]/div/div/div[1]/a')
+    #elems = driver.find_elements_by_xpath('//*[@id="rso"]/div[*]/div/div/div[1]/a')
+    #１位と最下位が取れないときの対応
+    elems = driver.find_elements_by_xpath('//*[@id="rso"]/div[*]/div/div/div[1]//*') 
     out_puts = []
     for elem in elems:
         url = elem.get_attribute('href')
+        if(url == None):
+            continue
         #print(url)
         
         #title = elem.find_elements_by_xpath('h3')[0].text
@@ -103,7 +107,8 @@ def __google_result__( url, target_keyword):
         title = ""
         if(len(d)>0):
             title = d[0].text
-
+        else:
+            continue
         out_dic ={}
         out_dic['source'] = "google検索"
         out_dic['query_key'] = target_keyword

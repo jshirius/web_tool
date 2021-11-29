@@ -1,19 +1,12 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[ ]:
-
-
 #サイトマップを取り出す(２階層対応)
 from bs4 import BeautifulSoup
 import requests
 import re
 import pandas as pd
+import time
 
 xml_sitemap_url = 'あなたのサイトマップのURL  例：http://samplepage/sitemap.xml'
 
-
-# In[ ]:
 
 
 def get_site_info(sitemap):
@@ -62,10 +55,7 @@ def get_site_info(sitemap):
 
 
 
-# In[ ]:
-
-
-#サイトマップ一覧を取得する
+#サイトマップ一覧(サイトマップ インデックス ファイル)を取得する
 response = requests.get(xml_sitemap_url)
 result = response.content
 url_lists = ''
@@ -83,27 +73,13 @@ for url in xml_sitemap_list:
     
 
 
-# In[ ]:
-
-
-import time
-
 output_url_list = []
 for sitemap in sitemap_list:
-    time.sleep(2)
+    time.sleep(2) #負荷対策で地味に重要
     d_list = get_site_info (sitemap)
     output_url_list.extend(d_list)
 
 
-# In[ ]:
-
-
 sitemap_df = pd.DataFrame(output_url_list)
 sitemap_df.to_csv("sitemap_list.csv")
-
-
-# In[ ]:
-
-
-
 
