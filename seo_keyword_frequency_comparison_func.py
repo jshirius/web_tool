@@ -145,6 +145,7 @@ def get_index_lable():
     #ラベルを作る
     labels = []
     #labels.append("項目")
+    labels.append("検索結果タイトル")
     labels.append("タイトル")
     labels.append("URL")
     labels.append("文字数")
@@ -158,7 +159,7 @@ def get_index_lable():
 
     return df
 
-def page_scraping( url:str, colum_name:str):
+def page_scraping( url:str, rs_title,colum_name:str):
 
     res = req.urlopen(url)
     soup = BeautifulSoup(res, 'html.parser')
@@ -171,7 +172,9 @@ def page_scraping( url:str, colum_name:str):
 
     data_list = []
 
-
+    #検索結果のタイトル(切れているのがわかる)
+    data_list.append(rs_title)
+    
     #タイトル
     t = soup.find('title').text
     data_list.append(t)
@@ -252,7 +255,7 @@ def _get_site_infos_detail(base_url, sites ):
         
     text = "元サイト(ランキング:%s)" % t
     label_df = get_index_lable()
-    df = page_scraping(base_url, text)
+    df = page_scraping(base_url, "", text)
     df_summary = pd.concat([label_df,df ], axis=1)
 
     #競合10サイト情報
@@ -269,7 +272,8 @@ def _get_site_infos_detail(base_url, sites ):
         print(site_info)
         t = "競合 %d位" % (i+1)
         try:
-            df = page_scraping(site_info['rs_link'], t)
+            #ページを読み込んでタイトルなどの情報を読み出す
+            df = page_scraping(site_info["rs_link"], site_info["rs_title"], t)
             df_summary = pd.concat([df_summary,df ], axis=1)
         except Exception as e:
             print("個別情報取得エラー", i)
@@ -279,6 +283,7 @@ def _get_site_infos_detail(base_url, sites ):
             data_list = []
             #タイトル
             data_list.append(site_info['rs_title'])
+            data_list.append("情報なし")
             data_list.append(site_info['rs_link'])
             data_list.append("情報なし")
             data_list.append("情報なし")
