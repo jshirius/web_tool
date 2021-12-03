@@ -153,6 +153,11 @@ def get_index_lable():
     labels.append("description")
     labels.append("気づき")
     labels.append("h1〜h5")
+    labels.append("")
+    labels.append("■h2")
+    labels.append("■■h3")
+    labels.append("■■■h4")
+    labels.append("■■■■h5")
 
     df = pd.DataFrame(labels)
     df.columns = ["項目"]
@@ -258,12 +263,28 @@ def _get_site_infos_detail(base_url, sites ):
     df = page_scraping(base_url, "", text)
     df_summary = pd.concat([label_df,df ], axis=1)
 
+    def result_info_write(site_info, text):
+        #補填する
+        data_list = []
+        #タイトル
+        data_list.append(site_info['rs_title'])
+        data_list.append("情報なし")
+        data_list.append(site_info['rs_link'])
+        data_list.append("情報なし")
+        data_list.append("情報なし")
+        data_list.append("情報なし")
+        data_list.append("")
+        data_list.append("情報なし")
+        df = pd.DataFrame(data_list)
+        df.columns = [t]
+        return df
+
     #競合10サイト情報
     limit = 10
     for i , site_info in enumerate(sites):
-        if(i >= limit):
-            #リミット超えた
-            break
+        #if(i >= limit):
+        #    #リミット超えた
+        #    break
             
         #自分のサイトか
         if(base_url in site_info['rs_link']):
@@ -272,26 +293,19 @@ def _get_site_infos_detail(base_url, sites ):
         print(site_info)
         t = "競合 %d位" % (i+1)
         try:
-            #ページを読み込んでタイトルなどの情報を読み出す
-            df = page_scraping(site_info["rs_link"], site_info["rs_title"], t)
-            df_summary = pd.concat([df_summary,df ], axis=1)
+            if(i <= limit):
+                #ページを読み込んでタイトルなどの情報を読み出す
+                df = page_scraping(site_info["rs_link"], site_info["rs_title"], t)
+                df_summary = pd.concat([df_summary,df ], axis=1)
+            else:
+                df = result_info_write(site_info, t)
+                df_summary = pd.concat([df_summary,df ], axis=1)
+
         except Exception as e:
             print("個別情報取得エラー", i)
             print(e, site_info)
 
-            #補填する
-            data_list = []
-            #タイトル
-            data_list.append(site_info['rs_title'])
-            data_list.append("情報なし")
-            data_list.append(site_info['rs_link'])
-            data_list.append("情報なし")
-            data_list.append("情報なし")
-            data_list.append("情報なし")
-            data_list.append("")
-            data_list.append("情報なし")
-            df = pd.DataFrame(data_list)
-            df.columns = [t]
+            df = result_info_write(site_info, t)
             df_summary = pd.concat([df_summary,df ], axis=1)
 
 
@@ -313,8 +327,8 @@ def get_keyword_web_info(base_url,  target_keyword):
     #webドライバ初期化
     driver = webdriver.Chrome('./chromedriver')
 
-    #google検索は３ページまで遷移する
-    sites = google_search(driver,target_keyword, 3)
+    #google検索は5ページまで遷移する
+    sites = google_search(driver,target_keyword, 5)
     df_summary = _get_site_infos_detail(base_url, sites )
 
     file_name = "「%s」の検索結果.csv" % target_keyword
