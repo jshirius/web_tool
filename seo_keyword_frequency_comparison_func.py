@@ -316,8 +316,8 @@ def _get_site_infos_detail(base_url, sites ):
             if(i <= limit):
                 #ページを読み込んでタイトルなどの情報を読み出す
                 df, result_dict = page_scraping(site_info["rs_link"], site_info["rs_title"], t)
-                print("result_dict")
-                print(result_dict)
+                #print("result_dict")
+                #print(result_dict)
                 result_list.append(result_dict)
                 df_summary = pd.concat([df_summary,df ], axis=1)
             else:
@@ -335,6 +335,27 @@ def _get_site_infos_detail(base_url, sites ):
 
     return df_summary, result_list
 
+# タグのリストデータをcsvに変換できるようにする
+def create_tag_csv(result_list):
+    output_list = []
+    for index, result in enumerate(result_list):
+        #output_dict = {}
+        print(result['title'])
+        #output_dict['title'] = result['title']
+        #output_dict['rank'] = index + 1
+        
+        for tag_dict in result["h_tag_list"]:
+            tag_dict["title"] = result['title']
+            tag_dict["url"] = result['url']
+            tag_dict["rank"] = index + 1
+            
+            #空白削除
+            tag_dict["data"] = tag_dict["data"].strip(" ")
+        
+            output_list.append(tag_dict)
+
+    return output_list
+            
 #WEBサイトの情報を取り出す
 def get_keyword_web_info(base_url,  target_keyword):
     """ターゲットキーワードを元に10サイトからキーワードを取得する
@@ -358,14 +379,18 @@ def get_keyword_web_info(base_url,  target_keyword):
     file_name = "「%s」の検索結果.csv" % target_keyword
     df_summary.to_csv(file_name, encoding='utf_8_sig', index = False)
 
+    output_list = create_tag_csv(result_list)
+    df_h_tag  = pd.DataFrame(output_list)
+    file_name = "「%s」のhタグリスト.csv" % target_keyword
+    df_h_tag.to_csv(file_name, encoding='utf_8_sig', index = False)
 
-    print("編集")
-    print(result_list)
+    #print("編集")
+    #print(result_list)
 
 
     driver.quit()
 
-    return df_summary
+    return df_summary, df_h_tag
 
 def main():
     #引数取得
