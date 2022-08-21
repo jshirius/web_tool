@@ -351,6 +351,9 @@ def create_tag_csv(result_list):
             
             #空白削除
             tag_dict["data"] = tag_dict["data"].strip(" ")
+
+            if(len(tag_dict["data"]) == 0):
+                continue
         
             output_list.append(tag_dict)
 
