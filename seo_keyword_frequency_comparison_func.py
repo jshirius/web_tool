@@ -28,6 +28,7 @@ from collections import Counter
 
 
 
+
 #形態素の初期化
 #morpheme_janome = JanomeDataSet('neologd')
 morpheme_janome = JanomeDataSet()
@@ -175,17 +176,27 @@ def page_scraping( url:str, rs_title,colum_name:str):
 
     tag = soup.html.body
 
+    #データ出力用
     data_list = []
+
+    # dictデータ(行データ用)
+    data_dict = {}
+    data_dict["h_tag_list"] = []
+
 
     #検索結果のタイトル(切れているのがわかる)
     data_list.append(rs_title)
+    data_dict['rs_title'] = rs_title
+
     
     #タイトル
     t = soup.find('title').text
     data_list.append(t)
+    data_dict['title'] = t
 
     #URL
     data_list.append(url)
+    data_dict['url'] = url
 
     #文字数
     text=soup.get_text()
@@ -219,16 +230,22 @@ def page_scraping( url:str, rs_title,colum_name:str):
                     text = elem.text.replace("\n","").replace("\t","")
                     
                     h = re.sub(r"\D", "", elem.name)
+
+                    #dict用に格納
+                    data_dict['url'] = url
+                    h_tag_dict = {"h_tag" : 0, "data": ""}
+                    h_tag_dict["h_tag"] = int(h)
+                    h_tag_dict["data"] = text
+                    data_dict["h_tag_list"].append(h_tag_dict)
+
                     h = int(h) - 1
-                    
-                    
                     
                     t = "%s %s" % ("■" * h,text)
                     data_list.append(t)
     df = pd.DataFrame(data_list)
     df.columns = [colum_name]
 
-    return df
+    return df, data_dict
 
 def __get_keyword_count(soup):
     text=soup.get_text()
@@ -260,8 +277,11 @@ def _get_site_infos_detail(base_url, sites ):
         
     text = "元サイト(ランキング:%s)" % t
     label_df = get_index_lable()
-    df = page_scraping(base_url, "", text)
+    df, _ = page_scraping(base_url, "", text)
     df_summary = pd.concat([label_df,df ], axis=1)
+
+    # hタグのリスト表示用
+    result_list = []
 
     def result_info_write(site_info, text):
         #補填する
@@ -295,7 +315,10 @@ def _get_site_infos_detail(base_url, sites ):
         try:
             if(i <= limit):
                 #ページを読み込んでタイトルなどの情報を読み出す
-                df = page_scraping(site_info["rs_link"], site_info["rs_title"], t)
+                df, result_dict = page_scraping(site_info["rs_link"], site_info["rs_title"], t)
+                print("result_dict")
+                print(result_dict)
+                result_list.append(result_dict)
                 df_summary = pd.concat([df_summary,df ], axis=1)
             else:
                 df = result_info_write(site_info, t)
@@ -310,7 +333,7 @@ def _get_site_infos_detail(base_url, sites ):
 
 
 
-    return df_summary
+    return df_summary, result_list
 
 #WEBサイトの情報を取り出す
 def get_keyword_web_info(base_url,  target_keyword):
@@ -329,10 +352,17 @@ def get_keyword_web_info(base_url,  target_keyword):
 
     #google検索は5ページまで遷移する
     sites = google_search(driver,target_keyword, 5)
-    df_summary = _get_site_infos_detail(base_url, sites )
+    df_summary,result_list = _get_site_infos_detail(base_url, sites )
 
+    #csvに書き出す
     file_name = "「%s」の検索結果.csv" % target_keyword
     df_summary.to_csv(file_name, encoding='utf_8_sig', index = False)
+
+
+    print("編集")
+    print(result_list)
+
+
     driver.quit()
 
     return df_summary
