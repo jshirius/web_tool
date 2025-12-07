@@ -1,0 +1,24 @@
+graph TD
+    Start([ユーザーが「分析実行」をクリック]) --> PrepareSheets[シート準備<br/>- サマリーシート作成<br/>- キーワード別シート作成]
+    
+    PrepareSheets --> CalcPeriods[期間計算<br/>リライト日を基準に<br/>前後30日間を算出]
+    
+    CalcPeriods --> FetchBefore[Search Console API<br/>リライト前データ取得<br/>- クリック数<br/>- 表示回数<br/>- CTR<br/>- 平均掲載順位<br/>- キーワード別データ]
+    
+    FetchBefore --> FetchAfter[Search Console API<br/>リライト後データ取得<br/>同様のデータを取得]
+    
+    FetchAfter --> CalcSummary[データ集計・比較<br/>- 変化量計算<br/>- 変化率計算<br/>- 判定決定]
+    
+    CalcSummary --> WriteSummary[サマリーシート出力<br/>- 測定URL・日付<br/>- 4指標の比較表<br/>- 改善/悪化判定]
+    
+    WriteSummary --> WriteKeywords[キーワード別シート出力<br/>- 全キーワード一覧<br/>- 前後比較<br/>- 重要度判定]
+    
+    WriteKeywords --> Complete([完了メッセージ表示])
+    
+    style Start fill:#e1f5ff
+    style Complete fill:#d4edda
+    style FetchBefore fill:#fff3cd
+    style FetchAfter fill:#fff3cd
+    style CalcSummary fill:#f8d7da
+    style WriteSummary fill:#d1ecf1
+    style WriteKeywords fill:#d1ecf1

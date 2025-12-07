@@ -1,0 +1,35 @@
+graph TD
+    Start([getSearchConsoleData関数開始]) --> CreateRequest[リクエストボディ作成<br/>- 開始日・終了日<br/>- dimensions: query<br/>- dimensionFilterGroups<br/>- rowLimit: 1000]
+    
+    CreateRequest --> BuildURL[API URL構築<br/>サイトURLをエンコード<br/>エンドポイント組み立て]
+    
+    BuildURL --> SetOptions[リクエストオプション設定<br/>- method: POST<br/>- Authorization: OAuth Token<br/>- Content-Type: JSON]
+    
+    SetOptions --> FetchAPI[UrlFetchApp.fetch実行<br/>REST API呼び出し]
+    
+    FetchAPI --> CheckStatus{HTTPステータス<br/>コード確認}
+    
+    CheckStatus -->|200 OK| ParseJSON[JSONレスポンスをパース]
+    CheckStatus -->|404/403/その他| ThrowError[エラーをスロー<br/>詳細メッセージ付き]
+    
+    ParseJSON --> CheckRows{データ行が<br/>存在するか?}
+    
+    CheckRows -->|No| ReturnEmpty[空のデータを返す<br/>clicks: 0<br/>impressions: 0<br/>ctr: 0<br/>position: 0]
+    
+    CheckRows -->|Yes| CalcSummary[サマリー計算<br/>- totalClicks<br/>- totalImpressions<br/>- avgPosition<br/>- CTR]
+    
+    CalcSummary --> MapKeywords[キーワード配列作成<br/>各行をマッピング<br/>- query<br/>- clicks<br/>- impressions<br/>- ctr<br/>- position]
+    
+    MapKeywords --> ReturnData[データオブジェクト返却<br/>summary + keywords]
+    
+    ReturnEmpty --> End([関数終了])
+    ReturnData --> End
+    ThrowError --> End
+    
+    style Start fill:#e1f5ff
+    style End fill:#d4edda
+    style CheckStatus fill:#fff3cd
+    style CheckRows fill:#fff3cd
+    style ThrowError fill:#f8d7da
+    style FetchAPI fill:#ffeaa7
+    style ReturnData fill:#d1ecf1
