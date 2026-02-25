@@ -520,6 +520,54 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
+  /* Summary Table */
+  .summary-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 28px;
+    overflow: hidden;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .summary-block-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 24px;
+    background: linear-gradient(90deg, rgba(123,111,255,0.12) 0%, rgba(0,229,200,0.06) 100%);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .summary-block-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent3);
+  }
+
+  .summary-block-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-left: auto;
+  }
+
+  .summary-table th:first-child {
+    text-align: left;
+    min-width: 90px;
+  }
+
+  .summary-table td.s-lump {
+    color: var(--accent3) !important;
+    font-weight: 500;
+  }
+
+  .summary-table td.s-monthly {
+    color: var(--green) !important;
+    font-weight: 500;
+  }
+
   /* Utility */
   .hidden { display: none !important; }
   .mt-8 { margin-top: 8px; }
@@ -911,6 +959,53 @@ function calcCardMain(price, number, pay) {
 }
 
 // ===== メインシミュレーション =====
+// ===== サマリーテーブル生成 =====
+function buildSummaryTable(content, selectedInsts, getMonthly) {
+  // getMonthly(product, n) => { value: number|null, label?: string }
+  const block = document.createElement('div');
+  block.className = 'summary-block';
+
+  // ヘッダー行（商品名）
+  let thCells = '<th>支払い回数</th>';
+  products.forEach(p => {
+    thCells += `<th>${p.name}<br><span style="font-weight:400;color:var(--text-dim);font-size:11px">${commaFormat(p.price)}</span></th>`;
+  });
+
+  // データ行
+  let rows = '';
+  selectedInsts.forEach(n => {
+    const isLump = n === 1;
+    let row = `<tr>`;
+    row += `<td style="text-align:left;font-family:'Noto Sans JP';font-size:13px;font-weight:500;color:${isLump ? 'var(--accent3)' : 'var(--text)'}">
+      ${isLump ? '一括払い' : n + '回払い'}
+    </td>`;
+    products.forEach(p => {
+      const result = getMonthly(p, n);
+      if (result === null) {
+        row += `<td style="color:var(--text-dim);font-size:11px;text-align:center">—</td>`;
+      } else {
+        row += `<td class="${isLump ? 's-lump' : 's-monthly'}">${commaFormat(result)}</td>`;
+      }
+    });
+    row += '</tr>';
+    rows += row;
+  });
+
+  block.innerHTML = `
+    <div class="summary-block-header">
+      <span class="summary-block-title">📊 月々の支払額 比較表</span>
+      <span class="summary-block-sub">商品ごとの月々支払額を横並びで確認</span>
+    </div>
+    <div class="table-wrap">
+      <table class="summary-table">
+        <thead><tr>${thCells}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+
+  content.appendChild(block);
+}
+
 function simulate() {
   if (products.length === 0) {
     showAlert('csvAlert', 'まずCSVファイルを読み込んでください');
@@ -933,6 +1028,13 @@ function simulate() {
   if (currentMode === 'annual') {
     const yearRate = parseFloat(document.getElementById('annualRate').value);
     document.getElementById('resultsTitle').textContent = `シミュレーション結果 — 実質年率 ${yearRate}%`;
+
+    // サマリーテーブル（実質年率モード）
+    buildSummaryTable(content, selectedInsts, (p, n) => {
+      const d = calcAnnualMode(p.price, yearRate, n);
+      if (n === 1) return d.firstPay;
+      return d.secondsPay;
+    });
 
     products.forEach((p, idx) => {
       const block = document.createElement('div');
@@ -983,10 +1085,34 @@ function simulate() {
   } else {
     // クレジットカードモード
     if (selectedCardId === 0) {
+      // サマリーテーブル（最安値モード）
+      const minMapForSummary = {};
+      CARD_DATA.forEach(card => {
+        card.number_of_payments.forEach((n, i) => {
+          const ar = card.annual_rate[i];
+          if (!minMapForSummary[n] || minMapForSummary[n].annual_rate > ar) {
+            minMapForSummary[n] = { annual_rate: ar, addonRate: calAddonRate(ar, n) };
+          }
+        });
+      });
+      buildSummaryTable(content, selectedInsts, (p, n) => {
+        if (n === 1) return p.price;
+        const info = minMapForSummary[n];
+        if (!info) return null;
+        return calcCardMain(p.price, n, info.addonRate).split_fee_cost_per_month;
+      });
       simulateMinCard(content, selectedInsts);
     } else {
       const card = CARD_DATA.find(c => c.id === selectedCardId);
       document.getElementById('resultsTitle').textContent = `シミュレーション結果 — ${card.name}`;
+      // サマリーテーブル（カードモード）
+      buildSummaryTable(content, selectedInsts, (p, n) => {
+        if (n === 1) return p.price;
+        const idx2 = card.number_of_payments.indexOf(n);
+        if (idx2 === -1) return null;
+        const addonRate = calAddonRate(card.annual_rate[idx2], n);
+        return calcCardMain(p.price, n, addonRate).split_fee_cost_per_month;
+      });
       simulateSingleCard(content, selectedInsts, card);
     }
   }
