@@ -945,8 +945,8 @@ function simulate() {
         const isLump = n === 1;
         rows += `<tr class="${isLump ? 'lump' : ''}">
           <td>${isLump ? '一括払い' : d.paymentsNum + '回払い'}</td>
-          <td class="monthly-pay">${commaFormat(isLump ? d.firstPay : d.secondsPay)}</td>
-          <td>${isLump ? '<span class="zero-fee">—</span>' : commaFormat(d.firstPay)}</td>
+          <td class="monthly-pay">${commaFormat(d.firstPay)}</td>
+          <td class="monthly-pay">${isLump ? '<span class="zero-fee">—</span>' : commaFormat(d.secondsPay)}</td>
           <td class="fee-pay">${isLump ? '<span class="zero-fee">¥0</span>' : commaFormat(d.fee)}</td>
           <td class="total-pay">${commaFormat(d.payment)}</td>
         </tr>`;
@@ -962,8 +962,8 @@ function simulate() {
             <thead>
               <tr>
                 <th>支払い回数</th>
-                <th>月々の支払い</th>
-                <th>初回支払い</th>
+                <th>1回目支払い額</th>
+                <th>2回目以降支払額</th>
                 <th>手数料</th>
                 <th>支払総額</th>
               </tr>
@@ -973,6 +973,12 @@ function simulate() {
         </div>`;
       content.appendChild(block);
     });
+
+    // 注釈を追加
+    const note = document.createElement('p');
+    note.style.cssText = 'font-size:12px;color:var(--text-dim);margin-top:16px;line-height:1.8;';
+    note.innerHTML = '※シミュレート計算は<a href="https://www.j-credit.or.jp/customer/basis/commission.html" target="_blank" style="color:var(--accent);text-decoration:none;">日本クレジット協会</a>の手数料計算を参考に作成しています';
+    content.appendChild(note);
 
   } else {
     // クレジットカードモード
