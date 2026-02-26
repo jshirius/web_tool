@@ -758,6 +758,7 @@
           <div class="card-chip" data-card="1" onclick="selectCard(this)">楽天カード</div>
           <div class="card-chip" data-card="2" onclick="selectCard(this)">セゾンカード</div>
           <div class="card-chip" data-card="3" onclick="selectCard(this)">セディナカード (SMBC)</div>
+          <div class="card-chip" data-card="4" onclick="selectCard(this)">三井住友カード</div>
         </div>
       </div>
       <p class="card-note mt-8">※ 「支払回数毎の最安値」は登録されたカード会社の中で最もお得なカードを回数ごとに表示します。</p>
@@ -816,6 +817,12 @@ const CARD_DATA = [
     number_of_payments: [3,5,6,10,12,15,18,20,24,30,36],
     annual_rate: [12.20,13.51,13.86,14.57,14.73,14.87,14.93,14.95,14.96,14.91,14.82],
     link: "https://www.cedyna.co.jp/om/payment/card-shopping/installments/"
+  },
+  {
+    id: 4, name: "三井住友カード",
+    number_of_payments: [3,5,6,10,12,15,18,20,24],
+    annual_rate: [12.00,13.25,13.75,14.25,14.50,14.75,14.75,14.75,14.75],
+    link: "https://www.smbc-card.com/mem/revo/bunkatsu.jsp"
   }
 ];
 
