@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>バルーンタグ変換ツール</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    background: #f5f4f0;
+    color: #1a1a1a;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  header {
+    margin-bottom: 2rem;
+  }
+
+  header h1 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #111;
+  }
+
+  header p {
+    font-size: 0.875rem;
+    color: #666;
+    margin-top: 0.4rem;
+  }
+
+  .mapping-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: #e8e6e0;
+    color: #444;
+    font-family: "SF Mono", "Fira Code", monospace;
+  }
+
+  .badge span {
+    color: #1a6b3a;
+    font-weight: 600;
+  }
+
+  .editor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+
+  @media (max-width: 640px) {
+    .editor-grid { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e0ded8;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid #e8e6e0;
+    background: #faf9f7;
+  }
+
+  .panel-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .panel-action {
+    font-size: 0.75rem;
+    color: #999;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1px solid #e0ded8;
+    background: transparent;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .panel-action:hover {
+    background: #f0ede6;
+    color: #555;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 320px;
+    padding: 14px;
+    font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.78rem;
+    line-height: 1.65;
+    border: none;
+    resize: vertical;
+    background: transparent;
+    color: #1a1a1a;
+    outline: none;
+  }
+
+  textarea::placeholder {
+    color: #bbb;
+  }
+
+  .output-area {
+    min-height: 320px;
+    padding: 14px;
+    font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.78rem;
+    line-height: 1.65;
+    color: #1a1a1a;
+    white-space: pre-wrap;
+    word-break: break-all;
+    cursor: text;
+    user-select: text;
+  }
+
+  .output-area.empty {
+    color: #bbb;
+    font-style: italic;
+  }
+
+  .output-area .comment { color: #888; }
+  .output-area .tag { color: #0a6e3c; }
+  .output-area .attr { color: #b36800; }
+  .output-area .value { color: #6030b0; }
+
+  .convert-row {
+    display: flex;
+    justify-content: center;
+    margin: 1rem 0;
+  }
+
+  .btn-convert {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 28px;
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    letter-spacing: 0.01em;
+  }
+
+  .btn-convert:hover { background: #333; }
+  .btn-convert:active { transform: scale(0.97); }
+
+  .btn-convert svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-top: 1px solid #e8e6e0;
+    background: #faf9f7;
+    font-size: 0.75rem;
+    min-height: 36px;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ccc;
+    flex-shrink: 0;
+  }
+  .status-dot.ok { background: #1a9a4a; }
+  .status-dot.warn { background: #d97706; }
+
+  .status-text { color: #888; }
+
+  .copy-success {
+    display: none;
+    font-size: 0.75rem;
+    color: #1a9a4a;
+    margin-left: auto;
+    font-weight: 500;
+  }
+
+  .copy-success.show { display: block; }
+
+  footer {
+    margin-top: 1.5rem;
+    font-size: 0.78rem;
+    color: #aaa;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>バルーンタグ 変換ツール</h1>
+    <p>旧テーマの <code>div.balloon</code> を <code>wp:loos/balloon</code> ブロックに変換します</p>
+  </header>
+
+  <div class="mapping-bar">
+    <div class="badge">pg_woman_1.png → <span>ID 3</span></div>
+    <div class="badge">ICON111.png → <span>ID 4</span></div>
+    <div class="badge">ICON112.png → <span>ID 2</span></div>
+  </div>
+
+  <div class="editor-grid">
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-label">変換前（入力）</span>
+        <button class="panel-action" id="btn-clear">クリア</button>
+      </div>
+      <textarea id="input-area" placeholder="ここに旧バルーンHTMLを貼り付けてください…
+
+例:
+&lt;div class=&quot;balloon&quot;&gt;
+&lt;figure class=&quot;balloon__img balloon__img-left&quot;&gt;
+...
+&lt;/div&gt;"></textarea>
+      <div class="status-row">
+        <div class="status-dot" id="in-dot"></div>
+        <span class="status-text" id="in-status">入力待ち</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-label">変換後（出力）</span>
+        <button class="panel-action" id="btn-copy">コピー</button>
+      </div>
+      <div class="output-area empty" id="output-area">変換ボタンを押すと結果が表示されます</div>
+      <div class="status-row">
+        <div class="status-dot" id="out-dot"></div>
+        <span class="status-text" id="out-status">出力なし</span>
+        <span class="copy-success" id="copy-msg">✓ コピーしました</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="convert-row">
+    <button class="btn-convert" id="btn-convert">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 8h12M10 5l4 3-4 3"/>
+      </svg>
+      変換する
+    </button>
+  </div>
+
+  <footer>span あり・なし両対応 ／ 記事内の複数バルーンを一括変換</footer>
+
+</div>
+<script>
+const ICON_MAP = {
+  "pg_woman_1.png": "3",
+  "ICON111.png": "4",
+  "ICON112.png": "2"
+};
+
+function extractBalloonId(block) {
+  const m = block.match(/src="[^"]+\/([^/]+\.png)"/);
+  if (m && ICON_MAP[m[1]]) return ICON_MAP[m[1]];
+  return "1";
+}
+
+function extractText(block) {
+  let m = block.match(/<div class="balloon__text[^"]*">([\s\S]*?)<\/div>\s*\n?\s*<\/div>/);
+  if (!m) m = block.match(/<div class="balloon__text[^"]*">([\s\S]*?)<\/div>/);
+  if (!m) return "";
+  let inner = m[1].trim();
+  inner = inner.replace(/<span[^>]*>/g, "").replace(/<\/span>/g, "");
+  const lines = inner.split(/\n/).map(l => l.trim()).filter(Boolean);
+  return lines.join("");
+}
+
+function convertBlock(block) {
+  const id = extractBalloonId(block);
+  const text = extractText(block);
+  return `<!-- wp:loos/balloon {"balloonID":"${id}"} -->\n<p>${text}</p>\n<!-- /wp:loos/balloon -->`;
+}
+
+function convertAll(input) {
+  const pattern = /<div class="balloon">[\s\S]*?<\/div>\s*\n?\s*<\/div>/g;
+  let count = 0;
+  const result = input.replace(pattern, m => { count++; return convertBlock(m); });
+  return { result, count };
+}
+
+function highlight(text) {
+  return text
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/(<!-- [^-].*?-->)/g, '<span class="comment">$1</span>')
+    .replace(/(&lt;\/?p&gt;)/g, '<span class="tag">$1</span>')
+    .replace(/(balloonID)/g, '<span class="attr">$1</span>')
+    .replace(/("[\d]+")/g, '<span class="value">$1</span>');
+}
+
+const inputEl = document.getElementById("input-area");
+const outputEl = document.getElementById("output-area");
+const inDot = document.getElementById("in-dot");
+const outDot = document.getElementById("out-dot");
+const inStatus = document.getElementById("in-status");
+const outStatus = document.getElementById("out-status");
+const copyMsg = document.getElementById("copy-msg");
+
+let lastResult = "";
+
+inputEl.addEventListener("input", () => {
+  const v = inputEl.value.trim();
+  if (!v) {
+    inDot.className = "status-dot";
+    inStatus.textContent = "入力待ち";
+  } else {
+    const n = (v.match(/<div class="balloon">/g) || []).length;
+    inDot.className = "status-dot ok";
+    inStatus.textContent = `バルーンブロック ${n} 件を検出`;
+  }
+});
+
+document.getElementById("btn-convert").addEventListener("click", () => {
+  const input = inputEl.value;
+  if (!input.trim()) {
+    outputEl.className = "output-area empty";
+    outputEl.innerHTML = "入力欄にHTMLを貼り付けてください";
+    outDot.className = "status-dot warn";
+    outStatus.textContent = "入力が空です";
+    return;
+  }
+
+  const { result, count } = convertAll(input);
+  lastResult = result;
+
+  if (count === 0) {
+    outputEl.className = "output-area empty";
+    outputEl.textContent = "変換対象のバルーンブロックが見つかりませんでした";
+    outDot.className = "status-dot warn";
+    outStatus.textContent = "対象なし";
+  } else {
+    outputEl.className = "output-area";
+    outputEl.innerHTML = highlight(result);
+    outDot.className = "status-dot ok";
+    outStatus.textContent = `${count} 件変換完了`;
+  }
+
+  copyMsg.classList.remove("show");
+});
+
+document.getElementById("btn-copy").addEventListener("click", () => {
+  if (!lastResult) return;
+  navigator.clipboard.writeText(lastResult).then(() => {
+    copyMsg.classList.add("show");
+    setTimeout(() => copyMsg.classList.remove("show"), 2000);
+  });
+});
+
+document.getElementById("btn-clear").addEventListener("click", () => {
+  inputEl.value = "";
+  outputEl.className = "output-area empty";
+  outputEl.textContent = "変換ボタンを押すと結果が表示されます";
+  inDot.className = "status-dot";
+  inStatus.textContent = "入力待ち";
+  outDot.className = "status-dot";
+  outStatus.textContent = "出力なし";
+  lastResult = "";
+  copyMsg.classList.remove("show");
+});
+</script>
+</body>
+</html>
