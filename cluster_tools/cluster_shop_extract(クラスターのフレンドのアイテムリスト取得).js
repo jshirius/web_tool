@@ -11,13 +11,13 @@
  *     (初回は「貼り付けを許可」の確認が出ることがあります)
  *  4. 終わると CSV がクリップボードにコピーされ、.csv もダウンロードされます
  *
- * 出力列: UID, 種別, 商品コード(url), 商品名   ← 既存の「フレンドの商品リスト」と同じ
+ * 出力列: UID, 種別, 商品名, 商品コード(url)   ← 商品名が先、商品コードが後
  * 並び順: ショップの表示順（新しい順）。LIMIT=10 なら先頭（最新）の10件。
  */
 (async () => {
   // ====== 設定 ======
   const LIMIT = 25;            // 取得する件数の上限。0 または null なら全件
-  const UID_MAP = { ushioka: 'F1', su_min: 'F2', usa_cluster: 'F3'}; // ユーザID → UID
+  const UID_MAP = { ushioka: 'F1', su_min: 'F2', usa_cluster: 'F3' }; // ユーザID → UID
   const KIND_MAP = { avatars: 'アバター', accessories: 'アクセサリ', items: 'クラフトアイテム' };
   const FETCH_DETAIL = false;  // true: 各商品ページから正式名称を取得(遅いが確実) / false: 一覧の名前のみ(通常はこれで十分)
   const DETAIL_WAIT_MS = 400;  // 商品ページ取得の間隔(サーバーに優しく)
@@ -103,10 +103,10 @@
     }
   }
 
-  // 3) CSV 化(列順は既存リストと同じ)
+  // 3) CSV 化(列順: UID, 種別, 商品名, 商品コード)
   const esc = (s) => `"${String(s ?? '').replace(/"/g, '""')}"`;
-  const header = ['UID(一意に特定するID)', '種別', '商品コード(urlもあり)', '商品名'];
-  const rows = items.map((it) => [uid, KIND_MAP[it.kind], it.url, it.name]);
+  const header = ['UID(一意に特定するID)', '種別', '商品名', '商品コード(urlもあり)'];
+  const rows = items.map((it) => [uid, KIND_MAP[it.kind], it.name, it.url]);
   const csv = [header, ...rows].map((r) => r.map(esc).join(',')).join('\r\n');
 
   // 4) 出力: クリップボード + ダウンロード + コンソール表示
@@ -119,8 +119,8 @@
   a.download = fname;
   document.body.appendChild(a); a.click(); a.remove();
 
-  console.table(rows.map((r) => ({ UID: r[0], 種別: r[1], 商品名: r[3], url: r[2].slice(-8) })));
-  const empty = rows.filter((r) => !r[3]).length;
+  console.table(rows.map((r) => ({ UID: r[0], 種別: r[1], 商品名: r[2], url: r[3].slice(-8) })));
+  const empty = rows.filter((r) => !r[2]).length;
   if (empty) console.warn(`商品名が空の行が ${empty} 件あります。確認してください。`);
   console.log(`完了: ${rows.length} 件 → ${fname}`);
 })();
