@@ -16,7 +16,7 @@
  */
 (async () => {
   // ====== 設定 ======
-  const LIMIT = 25;            // 取得する件数の上限。0 または null なら全件
+  const LIMIT = 50;            // 取得する件数の上限。0 または null なら全件
   const UID_MAP = { ushioka: 'F1', su_min: 'F2', usa_cluster: 'F3' }; // ユーザID → UID
   const KIND_MAP = { avatars: 'アバター', accessories: 'アクセサリ', items: 'クラフトアイテム' };
   const FETCH_DETAIL = false;  // true: 各商品ページから正式名称を取得(遅いが確実) / false: 一覧の名前のみ(通常はこれで十分)
